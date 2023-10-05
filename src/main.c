@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "setup.h"
-#include "run.h"
+#include "../include/setup.h"
+#include "../include/run.h"
 
 #define TESTIPV6 "::1"
 #define TESTIPV4 "127.0.0.1"
