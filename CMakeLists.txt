@@ -17,8 +17,10 @@ add_executable(
         src/tpool.c
         src/tls.c
         include/tls.h
-        src/routing.c
-        include/routing.h)
+        src/requesthandler.c
+        include/requesthandler.h
+        src/hashmap.c
+        include/hashmap.h)
 
 # Link against OpenSSL
 target_link_libraries(c_reverse_proxy OpenSSL::SSL OpenSSL::Crypto)
