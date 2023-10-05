@@ -15,7 +15,7 @@
 
 #define TIMEOUT 5
 
-void server_run(struct Server* server)
+void server_run(struct Server* server, struct Hashmap* hashmap)
 {
     tpool_t* thread_pool = tpool_create(sysconf(_SC_NPROCESSORS_CONF) + 1);
 
@@ -125,7 +125,8 @@ void server_run(struct Server* server)
             continue;
         }
 
-        arg->client = client;
+        arg->client  = client;
+        arg->hashmap = hashmap;
 
         tpool_add_work(thread_pool, (thread_func_t) NULL, arg);
     }

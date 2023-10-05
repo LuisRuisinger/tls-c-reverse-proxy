@@ -18,9 +18,16 @@ add_executable(
         src/tls.c
         include/tls.h
         src/requesthandler.c
-        include/requesthandler.h
         src/hashmap.c
-        include/hashmap.h)
+        include/hashmap.h
+        src/handling/readhandler.c
+        include/handling/readhandler.h
+        src/handling/writehandler.c
+        include/handling/writehandler.h
+        src/handling/upstreamhandler.c
+        include/handling/upstreamhandler.h
+        src/handling/requesthandler.c
+        include/handling/requesthandler.h)
 
 # Link against OpenSSL
 target_link_libraries(c_reverse_proxy OpenSSL::SSL OpenSSL::Crypto)
