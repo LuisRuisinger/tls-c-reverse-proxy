@@ -114,8 +114,13 @@ char** hashmap_get(char* key, struct Hashmap* hashmap)
             }
 
             char** list = calloc(size + 1, sizeof(char*));
-            element = cur->initial;
+            if (list == NULL)
+            {
+                fprintf(stderr, "memory couldn't be allocated for the list of values");
+                exit(EXIT_FAILURE);
+            }
 
+            element = cur->initial;
             for (int n = 0; n < size; n++)
             {
                 list[n] = element->value;
