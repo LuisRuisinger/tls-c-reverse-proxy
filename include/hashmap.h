@@ -5,6 +5,11 @@
 #ifndef C_REVERSE_PROXY_HASHMAP_H
 #define C_REVERSE_PROXY_HASHMAP_H
 
+enum Type
+{
+    STATICFILE, PROTOCOL
+};
+
 struct Element
 {
     char* value;
@@ -14,14 +19,16 @@ struct Element
 struct Linkedlist
 {
     char* key;
+    enum Type type;
     struct Element* initial;
     struct Linkedlist* next;
 };
 
 struct Hashmap
 {
-    void   (*add) (char* key, char* value, struct Hashmap* hashmap);
-    char** (*get) (char* key, struct Hashmap* hashmap);
+    void   (*add)     (struct Hashmap* hashmap, char* key, enum Type type, char* value);
+    void   (*add_all) (struct Hashmap* hashmap, char* key, enum Type type, char* f_value, ...);
+    char** (*get)     (struct Hashmap* hashmap, char* key, enum Type type);
 
     uint32_t size;
     struct Linkedlist** buckets;

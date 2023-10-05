@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "hashmap.h"
 
@@ -23,7 +24,7 @@ static uint32_t fnv1a_hash(const char *str)
     return hash;
 }
 
-void hashmap_add(char* key, char* value, struct Hashmap* hashmap)
+void hashmap_add(struct Hashmap* hashmap, char* key, enum Type type, char* value)
 {
     uint32_t index = fnv1a_hash(key);
     struct Linkedlist* cur = hashmap->buckets[index];
@@ -32,6 +33,7 @@ void hashmap_add(char* key, char* value, struct Hashmap* hashmap)
     {
         cur->key     = strdup(key);
         cur->initial = malloc(sizeof(struct Element));
+        cur->type    = type;
         cur->next    = NULL;
 
         if (cur->initial == NULL)
@@ -48,7 +50,8 @@ void hashmap_add(char* key, char* value, struct Hashmap* hashmap)
     while (cur->next != NULL)
     {
         if (strlen(cur->key) == strlen(key) &&
-            memcmp(cur->key, key, strlen(key)) == 0)
+            memcmp(cur->key, key, strlen(key)) == 0 &&
+            cur->type == type)
         {
             struct Element* cur_el = cur->initial;
             while (cur_el->next != NULL)
@@ -62,7 +65,7 @@ void hashmap_add(char* key, char* value, struct Hashmap* hashmap)
                 exit(EXIT_FAILURE);
             }
 
-            cur_el->next->value = value;
+            cur_el->next->value = strdup(value);
             cur_el->next->next  = NULL;
             return;
         }
@@ -77,8 +80,9 @@ void hashmap_add(char* key, char* value, struct Hashmap* hashmap)
         exit(EXIT_FAILURE);
     }
 
-    cur->next->key     = key;
+    cur->next->key     = strdup(key);
     cur->next->initial = malloc(sizeof(struct Element));
+    cur->next->type    = type;
     cur->next->next    = NULL;
 
     if (cur->next->initial == NULL)
@@ -91,7 +95,22 @@ void hashmap_add(char* key, char* value, struct Hashmap* hashmap)
     cur->next->initial->next  = NULL;
 }
 
-char** hashmap_get(char* key, struct Hashmap* hashmap)
+void hashmap_add_all(struct Hashmap* hashmap, char* key, enum Type type, char* f_value, ...)
+{
+    va_list argList;
+    va_start(argList, f_value);
+
+    char* current = f_value;
+    while (current != NULL)
+    {
+        hashmap_add(hashmap, key, type, current);
+        current = va_arg(argList, char*);
+    }
+
+    va_end(argList);
+}
+
+char** hashmap_get(struct Hashmap* hashmap, char* key, enum Type type)
 {
     uint32_t index = fnv1a_hash(key);
     struct Linkedlist* cur = hashmap->buckets[index];
@@ -102,7 +121,8 @@ char** hashmap_get(char* key, struct Hashmap* hashmap)
     while (cur->next != NULL)
     {
         if (strlen(cur->key) == strlen(key) &&
-            memcmp(cur->key, key, strlen(key)) == 0)
+            memcmp(cur->key, key, strlen(key)) == 0 &&
+            cur->type == type)
         {
             uint32_t size = 0;
             struct Element* element = cur->initial;
@@ -146,6 +166,7 @@ struct Hashmap* hashmap_init(uint32_t size)
     }
 
     hashmap->add     = hashmap_add;
+    hashmap->add_all = hashmap_add_all;
     hashmap->get     = hashmap_get;
     hashmap->size    = MAX(size, MINSIZE);
     hashmap->buckets = calloc(hashmap->size, sizeof(struct Linkedlist*));
