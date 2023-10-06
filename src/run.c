@@ -3,7 +3,6 @@
 //
 
 #include <unistd.h>
-#include <stdio.h>
 #include <netinet/in.h>
 #include <string.h>
 
@@ -12,6 +11,7 @@
 #include "../include/client.h"
 #include "../include/tls.h"
 #include "../include/run.h"
+#include "../include/handling/requesthandler.h"
 
 #define TIMEOUT 5
 
@@ -128,6 +128,6 @@ void server_run(struct Server* server, struct Hashmap* hashmap)
         arg->client  = client;
         arg->hashmap = hashmap;
 
-        tpool_add_work(thread_pool, (thread_func_t) NULL, arg);
+        tpool_add_work(thread_pool, (thread_func_t) handle_request, arg);
     }
 }

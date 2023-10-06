@@ -27,7 +27,10 @@ add_executable(
         src/handling/upstreamhandler.c
         include/handling/upstreamhandler.h
         src/handling/requesthandler.c
-        include/handling/requesthandler.h)
+        include/handling/requesthandler.h
+        src/handling/fieldparser.c
+        include/handling/fieldparser.h
+        include/handling/parserwrapper.h)
 
 # Link against OpenSSL
 target_link_libraries(c_reverse_proxy OpenSSL::SSL OpenSSL::Crypto)
