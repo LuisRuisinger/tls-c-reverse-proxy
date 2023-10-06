@@ -6,15 +6,15 @@
 #include <netinet/in.h>
 #include <string.h>
 
+#include "hashmap.h"
+#include "client.h"
 #include "setup.h"
 #include "tpool.h"
-#include "client.h"
 #include "tls.h"
 #include "run.h"
 
 #include "handling/parserwrapper.h"
 #include "handling/fieldparser.h"
-#include "hashmap.h"
 #include "handling/requesthandler.h"
 #include "handling/readhandler.h"
 
@@ -47,11 +47,8 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
 
     char* buffer  = calloc(BUFFER_SIZE, sizeof(char));
 
-    if (buffer == NULL || method == NULL || route == NULL || version == NULL)
-    {
-        close(client->fd);
+    if (buffer == NULL)
         return NULL;
-    }
 
     start_time = time(NULL);
     while (1)

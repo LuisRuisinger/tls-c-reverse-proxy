@@ -24,7 +24,7 @@ static uint32_t fnv1a_hash(const char *str)
     return hash;
 }
 
-void hashmap_add(struct Hashmap* hashmap, char* key, enum Type type, char* value)
+void hashmap_add(struct Hashmap* hashmap, char* key, Type type, char* value)
 {
     uint32_t index = fnv1a_hash(key);
     struct Linkedlist* cur = hashmap->buckets[index];
@@ -95,7 +95,7 @@ void hashmap_add(struct Hashmap* hashmap, char* key, enum Type type, char* value
     cur->next->initial->next  = NULL;
 }
 
-void hashmap_add_all(struct Hashmap* hashmap, char* key, enum Type type, char* f_value, ...)
+void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, char* f_value, ...)
 {
     va_list argList;
     va_start(argList, f_value);
@@ -110,7 +110,7 @@ void hashmap_add_all(struct Hashmap* hashmap, char* key, enum Type type, char* f
     va_end(argList);
 }
 
-char** hashmap_get(struct Hashmap* hashmap, char* key, enum Type type)
+char** hashmap_get(struct Hashmap* hashmap, char* key, Type type)
 {
     uint32_t index = fnv1a_hash(key);
     struct Linkedlist* cur = hashmap->buckets[index];

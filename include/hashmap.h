@@ -19,16 +19,16 @@ struct Element
 struct Linkedlist
 {
     char* key;
-    enum Type type;
+    Type type;
     struct Element* initial;
     struct Linkedlist* next;
 };
 
 struct Hashmap
 {
-    void   (*add)     (struct Hashmap* hashmap, char* key, enum Type type, char* value);
-    void   (*add_all) (struct Hashmap* hashmap, char* key, enum Type type, char* f_value, ...);
-    char** (*get)     (struct Hashmap* hashmap, char* key, enum Type type);
+    void   (*add)     (struct Hashmap* hashmap, char* key, Type type, char* value);
+    void   (*add_all) (struct Hashmap* hashmap, char* key, Type type, char* f_value, ...);
+    char** (*get)     (struct Hashmap* hashmap, char* key, Type type);
 
     uint32_t size;
     struct Linkedlist** buckets;

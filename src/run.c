@@ -6,12 +6,14 @@
 #include <netinet/in.h>
 #include <string.h>
 
+#include "hashmap.h"
+
 #include "../include/setup.h"
 #include "../include/tpool.h"
 #include "../include/client.h"
 #include "../include/tls.h"
-#include "../include/run.h"
 #include "../include/handling/requesthandler.h"
+#include "../include/run.h"
 
 #define TIMEOUT 5
 
