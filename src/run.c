@@ -12,7 +12,7 @@
 #include "../include/tpool.h"
 #include "../include/client.h"
 #include "../include/tls.h"
-#include "../include/handling/requesthandler.h"
+#include "requesthandler.h"
 #include "../include/run.h"
 
 #define TIMEOUT 5

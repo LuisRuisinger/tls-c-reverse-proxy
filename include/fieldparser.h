@@ -5,6 +5,9 @@
 #ifndef C_REVERSE_PROXY_FIELDPARSER_H
 #define C_REVERSE_PROXY_FIELDPARSER_H
 
+#include "hashmap.h"
+#include "parserwrapper.h"
+
 typedef enum
 {
     GET, POST, PUT, DELETE, BADCODE

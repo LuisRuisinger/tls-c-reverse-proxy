@@ -6,6 +6,9 @@
 #define C_REVERSE_PROXY_CLIENT_H
 
 #include <openssl/ssl.h>
+#include <netinet/in.h>
+
+#include "setup.h"
 
 typedef struct Client
 {

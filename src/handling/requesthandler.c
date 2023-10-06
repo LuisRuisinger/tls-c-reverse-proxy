@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "handling/fieldparser.h"
-#include "handling/readhandler.h"
+#include "fieldparser.h"
+#include "readhandler.h"
 #include "client.h"
 #include "run.h"
-#include "handling/requesthandler.h"
+#include "requesthandler.h"
 
 void* handle_request(void* args)
 {

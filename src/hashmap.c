@@ -26,7 +26,7 @@ static uint32_t fnv1a_hash(const char *str)
 
 void hashmap_add(struct Hashmap* hashmap, char* key, Type type, char* value)
 {
-    uint32_t index = fnv1a_hash(key);
+    uint32_t index = fnv1a_hash(key) % hashmap->size;
     struct Linkedlist* cur = hashmap->buckets[index];
 
     if (cur == NULL)
@@ -112,7 +112,7 @@ void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, char* f_valu
 
 char** hashmap_get(struct Hashmap* hashmap, char* key, Type type)
 {
-    uint32_t index = fnv1a_hash(key);
+    uint32_t index = fnv1a_hash(key) % hashmap->size;
     struct Linkedlist* cur = hashmap->buckets[index];
 
     if (cur == NULL)

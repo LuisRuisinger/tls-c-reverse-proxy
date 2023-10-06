@@ -8,8 +8,8 @@
 
 #include "setup.h"
 #include "hashmap.h"
-#include "handling/parserwrapper.h"
-#include "handling/fieldparser.h"
+#include "parserwrapper.h"
+#include "fieldparser.h"
 
 static char* parse_auth_field(const char* header, const char* field)
 {
@@ -81,13 +81,13 @@ HTTP_Header* parse_fields(const char* buffer)
     header->type    = NONE;
 
     free(method);
-    fprintf(stdout, "request head: %s %s %s\n", method, version, route);
+    fprintf(stdout, "request head: %s\n%s\n%s\n", method, version, route);
 
     header->auth   = parse_auth_field(buffer, "Authorization: ");
     header->cookie = parse_auth_field(buffer, "Cookie: ");
     header->accept = parse_auth_field(buffer, "Accept: ");
 
-    fprintf(stdout, "request head: %s %s %s\n", header->auth, header->cookie, header->accept);
+    fprintf(stdout, "request head: %s\n%s\n%s\n", header->auth, header->cookie, header->accept);
     return header;
 }
 

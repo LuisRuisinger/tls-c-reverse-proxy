@@ -8,7 +8,7 @@
 #define TESTIPV4 "127.0.0.1"
 
 int main() {
-    struct Server* server = server_init(HTTPS, IPv6, TESTIPV6, 8080);
+    struct Server* server = server_init(HTTP, IPv6, TESTIPV6, 8080);
     struct Hashmap* hashmap = hashmap_init(16);
     server_run(server, hashmap);
 }

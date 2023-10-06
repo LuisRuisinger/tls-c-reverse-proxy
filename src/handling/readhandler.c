@@ -13,10 +13,10 @@
 #include "tls.h"
 #include "run.h"
 
-#include "handling/parserwrapper.h"
-#include "handling/fieldparser.h"
-#include "handling/requesthandler.h"
-#include "handling/readhandler.h"
+#include "parserwrapper.h"
+#include "fieldparser.h"
+#include "requesthandler.h"
+#include "readhandler.h"
 
 static char* realloc_buffer(char* ptr, int32_t len)
 {
@@ -118,6 +118,9 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
     else {
         header->code = OK;
     }
+
+    fprintf(stdout, "type : %s\n", header->type == STATICFILE ? "STATICFILE" : "PROTOCOL");
+    fprintf(stdout, "code : %s\n\n", header->code == OK ? "OK" : "BADREQUEST");
 
     return header;
 }

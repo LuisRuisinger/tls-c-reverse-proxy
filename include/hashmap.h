@@ -5,6 +5,8 @@
 #ifndef C_REVERSE_PROXY_HASHMAP_H
 #define C_REVERSE_PROXY_HASHMAP_H
 
+#include <stdint.h>
+
 typedef enum
 {
     STATICFILE, PROTOCOL, NONE
