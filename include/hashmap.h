@@ -5,10 +5,10 @@
 #ifndef C_REVERSE_PROXY_HASHMAP_H
 #define C_REVERSE_PROXY_HASHMAP_H
 
-enum Type
+typedef enum
 {
-    STATICFILE, PROTOCOL
-};
+    STATICFILE, PROTOCOL, NONE
+} Type;
 
 struct Element
 {

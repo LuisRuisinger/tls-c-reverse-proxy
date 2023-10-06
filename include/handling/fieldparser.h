@@ -5,8 +5,26 @@
 #ifndef C_REVERSE_PROXY_FIELDPARSER_H
 #define C_REVERSE_PROXY_FIELDPARSER_H
 
-char* parse_auth_field(char* header, char* field);
-char** parse_fields(char* header);
-bool isfile(char* route);
+typedef enum
+{
+    GET, POST, PUT, DELETE, BADCODE
+} Method;
+
+typedef struct
+{
+    Method method;
+    char* version;
+    char* route;
+    char* cookie;
+    char* auth;
+    char* accept;
+
+    Type type;
+    Code code;
+    char** ips;
+} HTTP_Header;
+
+HTTP_Header* parse_fields(const char* buffer);
+void header_destroy(HTTP_Header* header);
 
 #endif //C_REVERSE_PROXY_FIELDPARSER_H

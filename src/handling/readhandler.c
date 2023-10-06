@@ -12,16 +12,11 @@
 #include "tls.h"
 #include "run.h"
 
+#include "handling/parserwrapper.h"
+#include "handling/fieldparser.h"
+#include "hashmap.h"
 #include "handling/requesthandler.h"
 #include "handling/readhandler.h"
-#include "handling/fieldparser.h"
-#include "handling/parserwrapper.h"
-
-static void clean_mem(char** ptr_list, int32_t len)
-{
-    for (int n = 0; n < len; n++)
-        free(ptr_list[n]);
-}
 
 static char* realloc_buffer(char* ptr, int32_t len)
 {
@@ -38,7 +33,7 @@ static char* realloc_buffer(char* ptr, int32_t len)
 }
 
 
-char* handle_read(struct Client* client, struct Hashmap* hashmap)
+HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
 {
     ssize_t rval;
     ssize_t total = 0;
@@ -51,9 +46,6 @@ char* handle_read(struct Client* client, struct Hashmap* hashmap)
     time_t start_time;
 
     char* buffer  = calloc(BUFFER_SIZE, sizeof(char));
-    char* method  = calloc(BUFFER_SIZE, sizeof(char));
-    char* route   = calloc(BUFFER_SIZE, sizeof(char));
-    char* version = calloc(BUFFER_SIZE, sizeof(char));
 
     if (buffer == NULL || method == NULL || route == NULL || version == NULL)
     {
@@ -73,8 +65,7 @@ char* handle_read(struct Client* client, struct Hashmap* hashmap)
 
         if (select(client->fd + 1, &readfds, NULL, NULL, &timeout) < 1)
         {
-            char* arr[] = {method, route, version, buffer};
-            clean_mem(arr, 4);
+            free(buffer);
             return NULL;
         }
 
@@ -90,8 +81,7 @@ char* handle_read(struct Client* client, struct Hashmap* hashmap)
 
         if (rval == -1 || (int) difftime(start_time, time(NULL)) >= TIMEOUT)
         {
-            char* arr[] = {method, route, version, buffer};
-            clean_mem(arr, 4);
+            free(buffer);
             return NULL;
         }
 
@@ -109,24 +99,28 @@ char* handle_read(struct Client* client, struct Hashmap* hashmap)
 
     fprintf(stdout, "read from client in : %f\n", difftime(start_time, time(NULL)));
 
-    if (sscanf(buffer, "%s %s %s", method, route, version) != 3)
-    {
-        char* arr[] = {method, route, version, buffer};
-        clean_mem(arr, 4);
+    HTTP_Header* header = parse_fields(buffer);
+    free(buffer);
+
+    if (header == NULL || header->method == BADCODE)
         return NULL;
+
+    if (header->method == GET && header->accept == NULL)
+        header->type = STATICFILE;
+    if (header->method != GET)
+        header->type = PROTOCOL;
+    if (header->accept != NULL && strstr(header->accept, "text") != NULL)
+        header->type = STATICFILE;
+    if (header->accept != NULL && strstr(header->accept, "application/json") != NULL)
+        header->type = PROTOCOL;
+
+    header->ips = hashmap->get(hashmap, header->route, header->type);
+
+    if (header->ips == NULL)
+        header->code = BADREQUEST;
+    else {
+        header->code = OK;
     }
 
-    fprintf(stdout, "request head: %s %s %s\n", method, version, route);
-
-    char** fields = parse_fields(buffer);
-    fprintf(stdout, "the auth field : --%s--\n", *fields);
-
-
-
-    char* arr[] = {method, route, version, buffer};
-    clean_mem(arr, 4);
-
-    free(fields);
-
-    return NULL;
+    return header;
 }

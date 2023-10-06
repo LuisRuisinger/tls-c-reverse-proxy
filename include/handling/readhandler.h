@@ -5,6 +5,6 @@
 #ifndef C_REVERSE_PROXY_READHANDLER_H
 #define C_REVERSE_PROXY_READHANDLER_H
 
-char* handle_read(struct Client* client, struct Hashmap* hashmap);
+HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap);
 
 #endif //C_REVERSE_PROXY_READHANDLER_H
