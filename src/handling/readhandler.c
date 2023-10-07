@@ -103,6 +103,10 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
 
     for (int n = 0;; n++)
     {
+        //
+        // this is insecure - possible segfault - because accept could be NULL
+        //
+
         if (header->accept[n] == NULL || header->ips != NULL)
             break;
 
@@ -126,8 +130,8 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
         header->code = OK;
     }
 
-    fprintf(stdout, "type : %s\n", header->type == STATICFILE ? "STATICFILE" : "PROTOCOL");
-    fprintf(stdout, "code : %s\n\n", header->code == OK ? "OK" : "BADREQUEST");
+    fprintf(stdout, "type    : %s\n", header->type == STATICFILE ? "STATICFILE" : "PROTOCOL");
+    fprintf(stdout, "code    : %s\n\n", header->code == OK ? "OK" : "BADREQUEST");
 
     return header;
 }

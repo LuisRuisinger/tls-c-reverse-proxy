@@ -29,9 +29,10 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, char* value)
     uint32_t index = fnv1a_hash(key) % hashmap->size;
     struct Linkedlist* cur = hashmap->buckets[index];
 
-    if (cur == NULL)
+    if (hashmap->buckets[index] == NULL)
     {
-        cur = malloc(sizeof(struct Linkedlist));
+        hashmap->buckets[index] = malloc(sizeof(struct Linkedlist));
+        cur =  hashmap->buckets[index];
         if (cur == NULL)
         {
             fprintf(stderr, "memory couldn't be allocated for a bucket");
@@ -125,7 +126,7 @@ char** hashmap_get(struct Hashmap* hashmap, char* key, Type type)
     if (cur == NULL)
         return NULL;
 
-    while (cur->next != NULL)
+    while (cur != NULL)
     {
         if (strlen(cur->key) == strlen(key) &&
             memcmp(cur->key, key, strlen(key)) == 0 &&

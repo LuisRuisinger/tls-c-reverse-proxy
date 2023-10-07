@@ -74,7 +74,8 @@ static Method parse_method_field(char* field)
 }
 
 /*
- * Parses the accept_field str into single mime fields with their respecitve q-value.
+ * Parses the accept_field str into single mime fields with their respective q-value.
+ * Because the existence of a q-value is not guaranteed it will be set to 1.0 per default.
  * Consumes the accept_field str of the http request.
  */
 
@@ -187,7 +188,9 @@ HTTP_Header* parse_fields(char* buffer)
     header->type    = NONE;
 
     fprintf(stdout,
-            "request head:\n%d\n%s\n%s\n",
+            "method  : %d\n"
+            "version : %s\n"
+            "route   : %s\n",
             header->method,
             header->version,
             header->route
@@ -199,7 +202,26 @@ HTTP_Header* parse_fields(char* buffer)
     char* accept_field = parse_auth_field(buffer, "Accept: ");
     header->accept = parse_accept_field(accept_field);
 
-    fprintf(stdout, "%s\n%s\n", header->auth, header->cookie);
+    fprintf(stdout,
+            "auth    : %s\n"
+            "cookie  : %s\n",
+            header->auth,
+            header->cookie
+    );
+    fprintf(stdout, "mime    : ----------\n");
+
+    if (header->accept != NULL)
+        for (int n = 0;; n++)
+        {
+            if (header->accept[n] == NULL)
+                break;
+
+            fprintf(stdout,
+                    "          %s - %f\n",
+                    header->accept[n]->mime ,
+                    header->accept[n]->pref
+            );
+        }
 
     free(buffer);
     return header;
