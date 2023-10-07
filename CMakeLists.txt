@@ -25,5 +25,10 @@ add_executable(
         src/handling/fieldparser.c
 )
 
+# enables DEBUG macro if in debug mode
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    add_definitions(-DDEBUG)
+endif()
+
 # Link against OpenSSL
 target_link_libraries(c_reverse_proxy OpenSSL::SSL OpenSSL::Crypto)

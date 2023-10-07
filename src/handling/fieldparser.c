@@ -246,7 +246,11 @@ HTTP_Header* parse_fields(char* buffer)
 
     header->accept  = parse_accept_field(accept_field, &format);
 
+#if DEBUG
+
     header_print(header, format);
+
+#endif
 
     free(buffer);
     return header;

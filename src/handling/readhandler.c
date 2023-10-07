@@ -94,7 +94,11 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
         }
     }
 
+#if DEBUG
+
     fprintf(stdout, "read from client in %f\n\n", difftime(start_time, time(NULL)));
+
+#endif
 
     // parsing fields and destroying buffer
 
@@ -131,8 +135,12 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
         header->code = OK;
     }
 
+#if DEBUG
+
     fprintf(stdout, "type    : %s\n", header->type == STATICFILE ? "STATICFILE" : "PROTOCOL");
     fprintf(stdout, "code    : %s\n\n\n\n", header->code == OK ? "OK" : "BADREQUEST");
+
+#endif
 
     return header;
 }
