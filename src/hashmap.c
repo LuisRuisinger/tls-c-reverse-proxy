@@ -31,7 +31,14 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, char* value)
 
     if (cur == NULL)
     {
-        cur->key     = strdup(key);
+        cur = malloc(sizeof(struct Linkedlist));
+        if (cur == NULL)
+        {
+            fprintf(stderr, "memory couldn't be allocated for a bucket");
+            exit(EXIT_FAILURE);
+        }
+
+        cur->key     = strdup(key);;
         cur->initial = malloc(sizeof(struct Element));
         cur->type    = type;
         cur->next    = NULL;

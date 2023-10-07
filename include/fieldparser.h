@@ -15,12 +15,18 @@ typedef enum
 
 typedef struct
 {
+    char* mime;
+    double pref;
+} Accept;
+
+typedef struct
+{
     Method method;
     char* version;
     char* route;
     char* cookie;
     char* auth;
-    char* accept;
+    Accept** accept;
 
     Type type;
     Code code;

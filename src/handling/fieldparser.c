@@ -43,20 +43,106 @@ static char* parse_auth_field(const char* header, const char* field)
 /*
  * Tries to detect the http method in the unparsed http request.
  * If the method is not parsable (e.g. malicious request) BADCODE will be returned.
- * Does not consume the http request.
+ * Consumes the method field of the http request.
  */
 
-static Method parse_method(const char* field)
+static Method parse_method_field(char* field)
 {
     if (strlen(field) == 3 && memcmp(field, "GET", 3) == 0)
+    {
+        free(field);
         return GET;
+    }
     if (strlen(field) == 3 && memcmp(field, "PUT", 3) == 0)
+    {
+        free(field);
         return PUT;
+    }
     if (strlen(field) == 4 && memcmp(field, "POST", 3) == 0)
+    {
+        free(field);
         return POST;
+    }
     if (strlen(field) == 6 && memcmp(field, "DELETE", 6) == 0)
+    {
+        free(field);
         return DELETE;
+    }
+
+    free(field);
     return BADCODE;
+}
+
+/*
+ * Parses the accept_field str into single mime fields with their respecitve q-value.
+ * Consumes the accept_field str of the http request.
+ */
+
+static Accept** parse_accept_field(char* field)
+{
+    if (field == NULL)
+        return NULL;
+
+    uint32_t count   = 0;
+    uint32_t index   = 0;
+    uint32_t l_split = 0;
+    uint32_t size;
+    bool flag = false;
+
+    char* ptr = (char*) field;
+    while (*ptr)
+        if (*(ptr++) == ',')
+            count++;
+
+    Accept** accept_elements = calloc(count + 2, sizeof(Accept*));
+
+    if (accept_elements == NULL)
+        return NULL;
+    accept_elements[count + 1] = NULL;
+
+    for (int n = 0; n < strlen(field) + 1; n++)
+    {
+        if (accept_elements[index] == NULL)
+        {
+            accept_elements[index] = malloc(sizeof(Accept));
+            if (accept_elements[index] == NULL)
+                return NULL;
+        }
+
+        if ((field[n] == ';') ||
+            (field[n] == ',' && !flag) ||
+            (field[n] == '\0' && !flag))
+        {
+            size = n - l_split;
+            accept_elements[index]->mime = calloc(size, sizeof(char));
+            accept_elements[index]->pref = 1.0;
+
+            if (accept_elements[index]->mime == NULL)
+                return NULL;
+
+            strncpy(accept_elements[index]->mime, &field[l_split], size);
+            l_split = n + 1;
+        }
+        else if ((field[n] == ',' && flag) ||
+                 (field[n] == '\0' && flag))
+        {
+            while (field[l_split++] != '=');
+
+            char* endptr = (char*) &field[n];
+            accept_elements[index]->pref = strtod(&field[l_split], &endptr);
+            l_split = n + 1;
+        }
+
+        if (field[n] == ';') flag = true;
+        else if (field[n] == ',')
+        {
+            flag = false;
+            index++;
+        }
+    }
+
+    free(field);
+    return accept_elements;
 }
 
 /*
@@ -93,23 +179,29 @@ HTTP_Header* parse_fields(char* buffer)
         return NULL;
     }
 
-    header->method  = parse_method(method);
-    header->version = version;
-    header->route   = route;
+    header->method  = parse_method_field(method);
+    header->version = strdup(version);
+    header->route   = strdup(route);
 
     header->ips     = NULL;
     header->type    = NONE;
 
-    fprintf(stdout, "request head: %s\n%s\n%s\n", method, version, route);
-    free(method);
+    fprintf(stdout,
+            "request head:\n%d\n%s\n%s\n",
+            header->method,
+            header->version,
+            header->route
+    );
 
     header->auth   = parse_auth_field(buffer, "Authorization: ");
     header->cookie = parse_auth_field(buffer, "Cookie: ");
-    header->accept = parse_auth_field(buffer, "Accept: ");
 
-    fprintf(stdout, "request head: %s\n%s\n%s\n", header->auth, header->cookie, header->accept);
+    char* accept_field = parse_auth_field(buffer, "Accept: ");
+    header->accept = parse_accept_field(accept_field);
+
+    fprintf(stdout, "%s\n%s\n", header->auth, header->cookie);
+
     free(buffer);
-
     return header;
 }
 
@@ -128,7 +220,9 @@ void header_destroy(HTTP_Header* header)
 
     if (header->auth   != NULL) free(header->auth);
     if (header->cookie != NULL) free(header->cookie);
-    if (header->accept != NULL) free(header->accept);
+    if (header->accept != NULL)
+        while (*(header->accept++) != NULL)
+            free((*(header->accept))->mime);
 
     free(header);
 }

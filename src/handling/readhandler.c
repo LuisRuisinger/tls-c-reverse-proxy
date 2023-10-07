@@ -97,21 +97,28 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
     fprintf(stdout, "read from client in : %f\n", difftime(start_time, time(NULL)));
 
     HTTP_Header* header = parse_fields(buffer);
-    free(buffer);
 
     if (header == NULL || header->method == BADCODE)
         return NULL;
 
-    if (header->method == GET && header->accept == NULL)
-        header->type = STATICFILE;
-    if (header->method != GET)
-        header->type = PROTOCOL;
-    if (header->accept != NULL && strstr(header->accept, "text") != NULL)
-        header->type = STATICFILE;
-    if (header->accept != NULL && strstr(header->accept, "application/json") != NULL)
-        header->type = PROTOCOL;
+    for (int n = 0;; n++)
+    {
+        if (header->accept[n] == NULL || header->ips != NULL)
+            break;
 
-    header->ips = hashmap->get(hashmap, header->route, header->type);
+        if (header->method == GET && header->accept == NULL)
+            header->type = STATICFILE;
+        if (header->method != GET)
+            header->type = PROTOCOL;
+        if (header->accept != NULL &&
+            strstr(header->accept[n]->mime, "text") != NULL)
+            header->type = STATICFILE;
+        if (header->accept != NULL &&
+            strstr(header->accept[n]->mime, "application/json") != NULL)
+            header->type = PROTOCOL;
+
+        header->ips = hashmap->get(hashmap, header->route, header->type);
+    }
 
     if (header->ips == NULL)
         header->code = BADREQUEST;
