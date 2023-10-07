@@ -243,8 +243,8 @@ void header_destroy(HTTP_Header* header)
     if (header->auth   != NULL) free(header->auth);
     if (header->cookie != NULL) free(header->cookie);
     if (header->accept != NULL)
-        while (*(header->accept++) != NULL)
-            free((*(header->accept))->mime);
+        while (*(header->accept) != NULL)
+            free((*(header->accept++))->mime);
 
     free(header);
 }
