@@ -27,7 +27,7 @@ typedef struct
     char** ips;
 } HTTP_Header;
 
-HTTP_Header* parse_fields(const char* buffer);
+HTTP_Header* parse_fields(char* buffer);
 void header_destroy(HTTP_Header* header);
 
 #endif //C_REVERSE_PROXY_FIELDPARSER_H
