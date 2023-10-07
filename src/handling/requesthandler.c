@@ -20,7 +20,7 @@ void* handle_request(void* args)
 
     close(((struct Handler_arg*) args)->client->fd);
 
-    free(header);
+    header_destroy(header);
     free(args);
 
     return NULL;

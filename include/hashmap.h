@@ -7,6 +7,9 @@
 
 #include <stdint.h>
 
+#define MAX(x, y) (x > y ? x : y)
+#define MINSIZE 16
+
 typedef enum
 {
     STATICFILE, PROTOCOL, NONE

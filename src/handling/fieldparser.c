@@ -79,7 +79,7 @@ static Method parse_method_field(char* field)
  * Consumes the accept_field str of the http request.
  */
 
-static Accept** parse_accept_field(char* field)
+static Accept** parse_accept_field(char* field, uint32_t* format)
 {
     if (field == NULL)
         return NULL;
@@ -115,6 +115,8 @@ static Accept** parse_accept_field(char* field)
             (field[n] == '\0' && !flag))
         {
             size = n - l_split;
+            *format = MAX(*format, size);
+
             accept_elements[index]->mime = calloc(size, sizeof(char));
             accept_elements[index]->pref = 1.0;
 
@@ -144,6 +146,53 @@ static Accept** parse_accept_field(char* field)
 
     free(field);
     return accept_elements;
+}
+
+/*
+ * Simple HTTP_Header visualisation.
+ * Does not consume the HTTP_Header;
+ */
+
+static void header_print(HTTP_Header* header, uint32_t format)
+{
+    fprintf(stdout,
+            "method  : %d\n"
+            "version : %s\n"
+            "route   : %s\n",
+            header->method,
+            header->version,
+            header->route
+    );
+
+    fprintf(stdout,
+            "auth    : %s\n"
+            "cookie  : %s\n",
+            header->auth,
+            header->cookie
+    );
+    fprintf(stdout, "mime    : ");
+
+    for (int n = 0; n < format + 11; n++)
+        fprintf(stdout, "-");
+    fprintf(stdout, "\n");
+
+    if (header->accept != NULL)
+        for (int n = 0;; n++)
+        {
+            if (header->accept[n] == NULL)
+                break;
+
+            fprintf(stdout, "          %s", header->accept[n]->mime);
+            for (int m = 0; m < format - strlen(header->accept[n]->mime); m++)
+                fprintf(stdout, " ");
+
+            fprintf(stdout, " - %f\n", header->accept[n]->pref);
+        }
+
+    fprintf(stdout, "          ");
+    for (int n = 0; n < format + 11; n++)
+        fprintf(stdout, "-");
+    fprintf(stdout, "\n");
 }
 
 /*
@@ -180,48 +229,24 @@ HTTP_Header* parse_fields(char* buffer)
         return NULL;
     }
 
+    // freeing of version and route not needed here - happens in header_destroy
+
     header->method  = parse_method_field(method);
-    header->version = strdup(version);
-    header->route   = strdup(route);
+    header->version = version;
+    header->route   = route;
 
     header->ips     = NULL;
     header->type    = NONE;
 
-    fprintf(stdout,
-            "method  : %d\n"
-            "version : %s\n"
-            "route   : %s\n",
-            header->method,
-            header->version,
-            header->route
-    );
-
-    header->auth   = parse_auth_field(buffer, "Authorization: ");
-    header->cookie = parse_auth_field(buffer, "Cookie: ");
+    header->auth    = parse_auth_field(buffer, "Authorization: ");
+    header->cookie  = parse_auth_field(buffer, "Cookie: ");
 
     char* accept_field = parse_auth_field(buffer, "Accept: ");
-    header->accept = parse_accept_field(accept_field);
+    uint32_t format    = 0;
 
-    fprintf(stdout,
-            "auth    : %s\n"
-            "cookie  : %s\n",
-            header->auth,
-            header->cookie
-    );
-    fprintf(stdout, "mime    : ----------\n");
+    header->accept  = parse_accept_field(accept_field, &format);
 
-    if (header->accept != NULL)
-        for (int n = 0;; n++)
-        {
-            if (header->accept[n] == NULL)
-                break;
-
-            fprintf(stdout,
-                    "          %s - %f\n",
-                    header->accept[n]->mime ,
-                    header->accept[n]->pref
-            );
-        }
+    header_print(header, format);
 
     free(buffer);
     return header;

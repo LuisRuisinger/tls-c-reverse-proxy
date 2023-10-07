@@ -10,9 +10,6 @@
 
 #include "hashmap.h"
 
-#define MAX(x, y) (x > y ? x : y)
-#define MINSIZE 16
-
 static uint32_t fnv1a_hash(const char *str)
 {
     uint32_t hash = 2166136261u;

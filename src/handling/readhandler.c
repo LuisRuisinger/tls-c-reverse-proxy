@@ -94,34 +94,35 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
         }
     }
 
-    fprintf(stdout, "read from client in : %f\n", difftime(start_time, time(NULL)));
+    fprintf(stdout, "read from client in %f\n\n", difftime(start_time, time(NULL)));
+
+    // parsing fields and destroying buffer
 
     HTTP_Header* header = parse_fields(buffer);
 
     if (header == NULL || header->method == BADCODE)
         return NULL;
 
-    for (int n = 0;; n++)
+    if (header->method != GET && header->accept == NULL)
     {
-        //
-        // this is insecure - possible segfault - because accept could be NULL
-        //
-
-        if (header->accept[n] == NULL || header->ips != NULL)
-            break;
-
-        if (header->method == GET && header->accept == NULL)
-            header->type = STATICFILE;
-        if (header->method != GET)
-            header->type = PROTOCOL;
-        if (header->accept != NULL &&
-            strstr(header->accept[n]->mime, "text") != NULL)
-            header->type = STATICFILE;
-        if (header->accept != NULL &&
-            strstr(header->accept[n]->mime, "application/json") != NULL)
-            header->type = PROTOCOL;
-
+        header->type = header->method == GET ? STATICFILE : PROTOCOL;
         header->ips = hashmap->get(hashmap, header->route, header->type);
+    }
+    else {
+        for (int n = 0;; n++)
+        {
+            if (header->accept[n] == NULL || header->ips != NULL)
+                break;
+
+            if (header->accept != NULL &&
+                strstr(header->accept[n]->mime, "text") != NULL)
+                header->type = STATICFILE;
+            if (header->accept != NULL &&
+                strstr(header->accept[n]->mime, "application/json") != NULL)
+                header->type = PROTOCOL;
+
+            header->ips = hashmap->get(hashmap, header->route, header->type);
+        }
     }
 
     if (header->ips == NULL)
@@ -131,7 +132,7 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
     }
 
     fprintf(stdout, "type    : %s\n", header->type == STATICFILE ? "STATICFILE" : "PROTOCOL");
-    fprintf(stdout, "code    : %s\n\n", header->code == OK ? "OK" : "BADREQUEST");
+    fprintf(stdout, "code    : %s\n\n\n\n", header->code == OK ? "OK" : "BADREQUEST");
 
     return header;
 }
