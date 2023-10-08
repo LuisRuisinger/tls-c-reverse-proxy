@@ -23,6 +23,7 @@ typedef struct
 {
     Method method;
     char* version;
+    char* uri;
     char* route;
     char* cookie;
     char* auth;

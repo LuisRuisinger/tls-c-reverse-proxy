@@ -9,6 +9,7 @@
 #include "setup.h"
 #include "hashmap.h"
 #include "fieldparser.h"
+#include "uriparser.h"
 
 /*
  * Searches for the field inside the unparsed http request.
@@ -158,9 +159,11 @@ static void header_print(HTTP_Header* header, uint32_t format)
     fprintf(stdout,
             "method  : %d\n"
             "version : %s\n"
+            "uri     : %s\n"
             "route   : %s\n",
             header->method,
             header->version,
+            header->uri,
             header->route
     );
 
@@ -206,34 +209,35 @@ static void header_print(HTTP_Header* header, uint32_t format)
 HTTP_Header* parse_fields(char* buffer)
 {
     char* method  = calloc(BUFFER_SIZE, sizeof(char));
-    char* route   = calloc(BUFFER_SIZE, sizeof(char));
+    char* uri     = calloc(BUFFER_SIZE, sizeof(char));
     char* version = calloc(BUFFER_SIZE, sizeof(char));
 
     HTTP_Header* header = malloc(sizeof(HTTP_Header));
 
-    if (header == NULL || method == NULL || route == NULL || version == NULL)
+    if (header == NULL || method == NULL || uri == NULL || version == NULL)
     {
         if (header  != NULL) free(header);
         if (method  != NULL) free(method);
-        if (route   != NULL) free(route);
+        if (uri     != NULL) free(uri);
         if (version != NULL) free(version);
         return NULL;
     }
 
-    if (sscanf(buffer, "%s %s %s", method, route, version) != 3)
+    if (sscanf(buffer, "%s %s %s", method, uri, version) != 3)
     {
         free(header);
         free(method);
-        free(route);
+        free(uri);
         free(version);
         return NULL;
     }
 
-    // freeing of version and route not needed here - happens in header_destroy
+    // freeing of version and uri not needed here - happens in header_destroy
 
     header->method  = parse_method_field(method);
+    header->route   = uri_splice(uri);
     header->version = version;
-    header->route   = route;
+    header->uri     = uri;
 
     header->ips     = NULL;
     header->type    = NONE;
@@ -267,6 +271,7 @@ void header_destroy(HTTP_Header* header)
         return;
 
     free(header->version);
+    free(header->uri);
     free(header->route);
 
     if (header->auth   != NULL) free(header->auth);

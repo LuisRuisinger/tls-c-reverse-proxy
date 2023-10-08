@@ -16,13 +16,14 @@ add_executable(
         src/run.c
         src/tpool.c
         src/tls.c
-        src/requesthandler.c
         src/hashmap.c
         src/handling/readhandler.c
         src/handling/writehandler.c
         src/handling/upstreamhandler.c
         src/handling/requesthandler.c
         src/handling/fieldparser.c
+        src/handling/uriparser.c
+        include/uriparser.h
 )
 
 # enables DEBUG macro if in debug mode
