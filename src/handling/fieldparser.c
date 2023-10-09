@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <uuid/uuid.h>
+#include <assert.h>
 
 #include "setup.h"
 #include "hashmap.h"
@@ -234,6 +236,9 @@ HTTP_Header* parse_fields(char* buffer)
         return NULL;
     }
 
+    header->uuid = malloc(sizeof(uuid_t));
+    assert(header->uuid != NULL);
+
     // freeing of version and uri not needed here - happens in header_destroy
 
     header->method  = parse_method_field(method);
@@ -254,10 +259,20 @@ HTTP_Header* parse_fields(char* buffer)
         header->length = 0;
     }
 
+    char* uuid = parse_auth_field(buffer, "UUID: ");
+    if (uuid != NULL)
+    {
+        uuid_parse(uuid, *(header->uuid));
+        free(uuid);
+    }
+    else {
+        uuid_generate_random(*(header->uuid));
+    }
+
     char* accept_field = parse_auth_field(buffer, "Accept: ");
     uint32_t format    = 0;
 
-    header->accept  = parse_accept_field(accept_field, &format);
+    header->accept = parse_accept_field(accept_field, &format);
 
 #if DEBUG
 

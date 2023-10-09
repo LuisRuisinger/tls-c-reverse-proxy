@@ -31,8 +31,6 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
         return NULL;
     }
 
-    fprintf(stdout, "connecting to : %s : %d\n", server->ip, server->port);
-
     if (connect(server->socket, (struct sockaddr *) &sock_addr, sizeof(sock_addr)) != 0)
     {
         //
@@ -44,9 +42,11 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
         return NULL;
     }
 
-    fprintf(stdout, "connected to : %s : %d\n", server->ip, server->port);
+    fprintf(stdout, "connected to : %s : %d\n\n", server->ip, server->port);
 
     struct Client* client = malloc(sizeof(struct Client));
+    if (client == NULL)
+        return NULL;
 
     if (server->protocol == HTTPS)
     {
@@ -77,13 +77,9 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
         }
 
         SSL_write(client->ssl, message->header, strlen(message->header) + 1);
-        fprintf(stdout, "send %lu bytes via HTTPS\n", strlen(message->header) + 1);
 
         if (message->body != NULL)
-        {
             SSL_write(client->ssl, message->body, strlen(message->body) + 1);
-            fprintf(stdout, "send %lu bytes via HTTPS\n", strlen(message->body) + 1);
-        }
 
         SSL_shutdown(client->ssl);
         SSL_free(client->ssl);

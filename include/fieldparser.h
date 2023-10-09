@@ -26,6 +26,7 @@ typedef struct
     char* uri;
     char* route;
     int32_t length;
+    uuid_t* uuid;
     char* cookie;
     char* auth;
     Accept** accept;
