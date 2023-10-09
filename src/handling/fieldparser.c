@@ -162,11 +162,13 @@ static void header_print(HTTP_Header* header, uint32_t format)
             "method  : %d\n"
             "version : %s\n"
             "uri     : %s\n"
-            "route   : %s\n",
+            "route   : %s\n"
+            "host    : %s\n",
             header->method,
             header->version,
             header->uri,
-            header->route
+            header->route,
+            header->host
     );
 
     fprintf(stdout,
@@ -246,6 +248,7 @@ HTTP_Header* parse_fields(char* buffer)
     header->version = version;
     header->uri     = uri;
 
+    header->host    = parse_auth_field(buffer, "Host: ");
     header->auth    = parse_auth_field(buffer, "Authorization: ");
     header->cookie  = parse_auth_field(buffer, "Cookie: ");
 
@@ -298,6 +301,7 @@ void header_destroy(HTTP_Header* header)
     free(header->route);
     free(header->uuid);
 
+    if (header->host   != NULL) free(header->host);
     if (header->auth   != NULL) free(header->auth);
     if (header->cookie != NULL) free(header->cookie);
     if (header->accept != NULL)

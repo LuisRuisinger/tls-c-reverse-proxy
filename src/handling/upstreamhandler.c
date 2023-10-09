@@ -9,11 +9,57 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "fieldparser.h"
 #include "tls.h"
 #include "client.h"
 #include "upstreamhandler.h"
+
+static char* build_header(HTTP_Header* header)
+{
+    char* buffer = calloc(BUFFER_SIZE * 4, sizeof(char));
+    assert(buffer != NULL);
+
+    switch (header->method) {
+
+        case GET:     strcat(buffer, "GET ");    break;
+        case POST:    strcat(buffer, "POST ");   break;
+        case PUT:     strcat(buffer, "PUT ");    break;
+        case DELETE:  strcat(buffer, "DELETE "); break;
+        case BADCODE: return NULL;
+    }
+
+    strcat(buffer, header->uri);
+    strcat(buffer, " HTTP/1.1\r\nHost: ");
+    strcat(buffer, header->host);
+    strcat(buffer, "\r\nConnection: keep-alive\r\nAccept: ");
+    strcat(buffer, header->accept[0]->mime);
+
+    if (header->auth != NULL)
+    {
+        strcat(buffer, "\r\nAuthentication: ");
+        strcat(buffer, header->auth);
+    }
+
+    if (header->cookie != NULL)
+    {
+        strcat(buffer, "\r\nCookie: ");
+        strcat(buffer, header->cookie);
+    }
+
+
+    strcat(buffer, "\r\nContent-Length: ");
+    char num[16];
+    sprintf(num, "%d", header->length);
+    strcat(buffer, num);
+
+    strcat(buffer, "\r\nUUID: ");
+    strcat(buffer, (const char *) header->uuid);
+    strcat(buffer, "\r\n\r\n");
+
+    return buffer;
+}
 
 char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct Server* server)
 {
@@ -48,6 +94,10 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
     if (client == NULL)
         return NULL;
 
+    char* buffer = build_header(header);
+    if (buffer == NULL)
+        return NULL;
+
     if (server->protocol == HTTPS)
     {
         if ((client->ctx = create_context()) == NULL)
@@ -76,7 +126,7 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
             return NULL;
         }
 
-        SSL_write(client->ssl, message->header, strlen(message->header) + 1);
+        SSL_write(client->ssl, buffer, strlen(buffer) + 1);
 
         if (message->body != NULL)
             SSL_write(client->ssl, message->body, strlen(message->body) + 1);
@@ -86,7 +136,7 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
         SSL_CTX_free(client->ctx);
     }
     else {
-        rval = write(server->socket, message->header, strlen(message->header) + 1);
+        rval = write(server->socket, buffer, strlen(buffer) + 1);
         if (rval == -1)
             perror((const char *) &errno);
 
