@@ -296,6 +296,7 @@ void header_destroy(HTTP_Header* header)
     free(header->version);
     free(header->uri);
     free(header->route);
+    free(header->uuid);
 
     if (header->auth   != NULL) free(header->auth);
     if (header->cookie != NULL) free(header->cookie);
