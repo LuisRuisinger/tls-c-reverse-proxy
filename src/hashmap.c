@@ -4,7 +4,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
@@ -22,7 +21,7 @@ static uint32_t fnv1a_hash(const char *str)
     return hash;
 }
 
-void hashmap_add(struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, char* value)
+void hashmap_add(struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, struct Server* server)
 {
     uint32_t index = fnv1a_hash(key) % hashmap->size;
     struct Linkedlist* cur = hashmap->buckets[index];
@@ -41,7 +40,7 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, enum Protocol pr
         cur->type     = type;
         cur->next     = NULL;
 
-        cur->initial->value = strdup(value);
+        cur->initial->value = server;
         cur->initial->next  = NULL;
         return;
     }
@@ -59,7 +58,7 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, enum Protocol pr
             cur_el->next = malloc(sizeof(struct Element));
             assert(cur_el->next != NULL);
 
-            cur_el->next->value = strdup(value);
+            cur_el->next->value = server;
             cur_el->next->next  = NULL;
             return;
         }
@@ -77,20 +76,20 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, enum Protocol pr
     cur->next->protocol = protocol;
     cur->next->next     = NULL;
 
-    cur->next->initial->value = strdup(value);
+    cur->next->initial->value = server;
     cur->next->initial->next  = NULL;
 }
 
-void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, char* f_value, ...)
+void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, struct Server* f_server, ...)
 {
     va_list argList;
-    va_start(argList, f_value);
+    va_start(argList, f_server);
 
-    char* current = f_value;
+    struct Server* current = f_server;
     while (current != NULL)
     {
         hashmap_add(hashmap, key, type, protocol, current);
-        current = va_arg(argList, char*);
+        current = va_arg(argList, struct Server*);
     }
 
     va_end(argList);
@@ -122,17 +121,17 @@ Routes* hashmap_get(struct Hashmap* hashmap, char* key, Type type)
             Routes* routes = malloc(sizeof(Routes));
             assert(routes != NULL);
 
-            routes->ips = calloc(size + 1, sizeof(char*));
-            assert(routes->ips != NULL);
+            routes->server = calloc(size + 1, sizeof(struct Server*));
+            assert(routes->server != NULL);
 
             element = cur->initial;
             for (int n = 0; n < size; n++)
             {
-                routes->ips[n] = element->value;
+                routes->server[n] = element->value;
                 element = element->next;
             }
 
-            routes->ips[size] = NULL;
+            routes->server[size] = NULL;
             return routes;
         }
         cur = cur->next;

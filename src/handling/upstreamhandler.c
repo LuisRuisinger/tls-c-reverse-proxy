@@ -8,14 +8,16 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "fieldparser.h"
 #include "tls.h"
 #include "client.h"
 #include "upstreamhandler.h"
 
-char* handle_upstream_write(HTTP_Header* header, struct Server* server, char* buffer)
+char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct Server* server)
 {
+    ssize_t rval;
     struct sockaddr_in6 sock_addr;
     server->socket = socket(PF_INET6, SOCK_STREAM, 0);
 
@@ -29,6 +31,8 @@ char* handle_upstream_write(HTTP_Header* header, struct Server* server, char* bu
         return NULL;
     }
 
+    fprintf(stdout, "connecting to : %s : %d\n", server->ip, server->port);
+
     if (connect(server->socket, (struct sockaddr *) &sock_addr, sizeof(sock_addr)) != 0)
     {
         //
@@ -39,6 +43,8 @@ char* handle_upstream_write(HTTP_Header* header, struct Server* server, char* bu
         close(server->socket);
         return NULL;
     }
+
+    fprintf(stdout, "connected to : %s : %d\n", server->ip, server->port);
 
     struct Client* client = malloc(sizeof(struct Client));
 
@@ -70,13 +76,30 @@ char* handle_upstream_write(HTTP_Header* header, struct Server* server, char* bu
             return NULL;
         }
 
-        SSL_write(client->ssl, buffer, sizeof(buffer));
+        SSL_write(client->ssl, message->header, strlen(message->header) + 1);
+        fprintf(stdout, "send %lu bytes via HTTPS\n", strlen(message->header) + 1);
+
+        if (message->body != NULL)
+        {
+            SSL_write(client->ssl, message->body, strlen(message->body) + 1);
+            fprintf(stdout, "send %lu bytes via HTTPS\n", strlen(message->body) + 1);
+        }
 
         SSL_shutdown(client->ssl);
         SSL_free(client->ssl);
         SSL_CTX_free(client->ctx);
     }
     else {
-        write(client->fd, buffer, sizeof(buffer));
+        rval = write(server->socket, message->header, strlen(message->header) + 1);
+        if (rval == -1)
+            perror((const char *) &errno);
+
+        if (message->body != NULL)
+        {
+            rval = write(server->socket, message->body, strlen(message->body) + 1);
+            if (rval == -1)
+                perror((const char *) &errno);
+        }
     }
+    return NULL;
 }

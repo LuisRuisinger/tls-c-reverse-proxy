@@ -19,7 +19,7 @@ typedef enum
 
 struct Element
 {
-    char* value;
+    struct Server* value;
     struct Element* next;
 };
 
@@ -33,14 +33,14 @@ struct Linkedlist
 };
 
 typedef struct {
-    char** ips;
+    struct Server** server;
     enum Protocol protocol;
 } Routes;
 
 struct Hashmap
 {
-    void    (*add)     (struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, char* value);
-    void    (*add_all) (struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, char* f_value, ...);
+    void    (*add)     (struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, struct Server* server);
+    void    (*add_all) (struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, struct Server* f_server, ...);
     Routes* (*get)     (struct Hashmap* hashmap, char* key, Type type);
 
     uint32_t size;

@@ -9,6 +9,7 @@
 #include "readhandler.h"
 #include "client.h"
 #include "run.h"
+#include "upstreamhandler.h"
 #include "requesthandler.h"
 
 void* handle_request(void* args)
@@ -17,6 +18,10 @@ void* handle_request(void* args)
             ((struct Handler_arg*) args)->client,
             ((struct Handler_arg*) args)->hashmap
     );
+
+    if (wrapper->pos_routes->server[0] != NULL)
+        handle_upstream_write(wrapper->header, wrapper->message, wrapper->pos_routes->server[0]);
+
 
     close(((struct Handler_arg*) args)->client->fd);
 
