@@ -13,14 +13,20 @@
 
 void* handle_request(void* args)
 {
-    HTTP_Header* header = handle_read(
+    HTTP_Wrapper_struct* wrapper = handle_read(
             ((struct Handler_arg*) args)->client,
             ((struct Handler_arg*) args)->hashmap
     );
 
     close(((struct Handler_arg*) args)->client->fd);
 
-    header_destroy(header);
+    header_destroy(wrapper->header);
+
+    free(wrapper->message->header);
+    free(wrapper->message->body);
+    free(wrapper->pos_routes);
+    free(wrapper);
+
     free(args);
 
     return NULL;

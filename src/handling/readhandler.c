@@ -32,8 +32,13 @@ static char* realloc_buffer(char* ptr, int32_t len)
     return new_ptr;
 }
 
+char* read_header(struct Client* client)
+{
 
-HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
+}
+
+
+HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap)
 {
     ssize_t rval;
     ssize_t total = 0;
@@ -45,10 +50,15 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
 
     time_t start_time;
 
-    char* buffer  = calloc(BUFFER_SIZE, sizeof(char));
-
-    if (buffer == NULL)
+    char* buffer_header  = calloc(BUFFER_SIZE, sizeof(char));
+    if (buffer_header == NULL)
         return NULL;
+
+    HTTP_Message* message = malloc(sizeof(HTTP_Message));
+    if (message == NULL)
+        return NULL;
+
+    // read the header
 
     start_time = time(NULL);
     while (1)
@@ -62,7 +72,7 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
 
         if (select(client->fd + 1, &readfds, NULL, NULL, &timeout) < 1)
         {
-            free(buffer);
+            free(buffer_header);
             return NULL;
         }
 
@@ -71,28 +81,29 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
         //
 
         if (client->protocol == HTTPS)
-            rval = SSL_read(client->ssl, buffer + total, BUFFER_SIZE * alloc_read - total);
+            rval = SSL_read(client->ssl, buffer_header + total, BUFFER_SIZE * alloc_read - total);
         else {
-            rval = read(client->fd, buffer + total, BUFFER_SIZE * alloc_read - total);
+            rval = read(client->fd, buffer_header + total, BUFFER_SIZE * alloc_read - total);
         }
 
         if (rval == -1 || (int) difftime(start_time, time(NULL)) >= TIMEOUT)
         {
-            free(buffer);
+            free(buffer_header);
             return NULL;
         }
 
         total += rval;
-        if (strstr(buffer, "\r\n\r\n") != NULL)
+        if (strstr(buffer_header, "\r\n\r\n") != NULL)
             break;
 
         if (total >= BUFFER_SIZE * alloc_read)
         {
-            buffer = realloc_buffer(buffer, ++alloc_read);
-            if (buffer == NULL)
+            buffer_header = realloc_buffer(buffer_header, ++alloc_read);
+            if (buffer_header == NULL)
                 return NULL;
         }
     }
+    message->header = buffer_header;
 
 #if DEBUG
 
@@ -100,47 +111,93 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
 
 #endif
 
-    // parsing fields and destroying buffer
+    // parsing fields and destroying buffer_header
 
-    HTTP_Header* header = parse_fields(buffer);
-
+    HTTP_Header* header = parse_fields(buffer_header);
     if (header == NULL || header->method == BADCODE)
+    {
+        header_destroy(header);
+        free(buffer_header);
         return NULL;
+    }
+
+    // read the body
+
+    if (header->length != 0)
+    {
+        char* buffer_body  = calloc(header->length + 1, sizeof(char));
+        if (buffer_body == NULL)
+        {
+            free(buffer_header);
+            header_destroy(header);
+            return NULL;
+        }
+
+        start_time = time(NULL);
+        while (strlen(buffer_body) != header->length)
+        {
+            if (client->protocol == HTTPS)
+                rval = SSL_read(client->ssl, buffer_body + total, BUFFER_SIZE * alloc_read - total);
+            else {
+                rval = read(client->fd, buffer_body + total, BUFFER_SIZE * alloc_read - total);
+            }
+
+            if (rval == -1 || (int) difftime(start_time, time(NULL)) >= TIMEOUT)
+            {
+                free(buffer_header);
+                header_destroy(header);
+                return NULL;
+            }
+        }
+        message->body = buffer_body;
+    }
+
+    // find routes
+
+    HTTP_Wrapper_struct* wrapper = malloc(sizeof(HTTP_Wrapper_struct));
+    if (wrapper == NULL)
+    {
+        header_destroy(header);
+        return NULL;
+    }
+
+    wrapper->header  = header;
+    wrapper->message = message;
 
     if (header->method != GET && header->accept == NULL)
     {
-        header->type = header->method == GET ? STATICFILE : PROTOCOL;
-        header->pos_routes = hashmap->get(hashmap, header->route, header->type);
+        wrapper->type = header->method == GET ? STATICFILE : PROTOCOL;
+        wrapper->pos_routes = hashmap->get(hashmap, header->route, wrapper->type);
     }
     else {
         for (int n = 0;; n++)
         {
-            if (header->accept[n] == NULL || header->pos_routes != NULL)
+            if (header->accept[n] == NULL || wrapper->pos_routes != NULL)
                 break;
 
             if (header->accept != NULL &&
                 strstr(header->accept[n]->mime, "text") != NULL)
-                header->type = STATICFILE;
+                wrapper->type = STATICFILE;
             if (header->accept != NULL &&
                 strstr(header->accept[n]->mime, "application/json") != NULL)
-                header->type = PROTOCOL;
+                wrapper->type = PROTOCOL;
 
-            header->pos_routes = hashmap->get(hashmap, header->route, header->type);
+            wrapper->pos_routes = hashmap->get(hashmap, header->route, wrapper->type);
         }
     }
 
-    if (header->pos_routes == NULL)
-        header->code = BADREQUEST;
+    if (wrapper->pos_routes == NULL)
+        wrapper->code = BADREQUEST;
     else {
-        header->code = OK;
+        wrapper->code = OK;
     }
 
 #if DEBUG
 
-    fprintf(stdout, "type    : %s\n", header->type == STATICFILE ? "STATICFILE" : "PROTOCOL");
-    fprintf(stdout, "code    : %s\n\n\n\n", header->code == OK ? "OK" : "BADREQUEST");
+    fprintf(stdout, "type    : %s\n", wrapper->type == STATICFILE ? "STATICFILE" : "PROTOCOL");
+    fprintf(stdout, "code    : %s\n\n\n\n", wrapper->code == OK ? "OK" : "BADREQUEST");
 
 #endif
 
-    return header;
+    return wrapper;
 }

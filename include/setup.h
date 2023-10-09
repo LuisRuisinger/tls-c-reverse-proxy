@@ -18,8 +18,9 @@ enum Version {
 };
 
 struct Server {
-    int32_t socket;
+    char* ip;
     int32_t port;
+    int32_t socket;
     enum Version version;
     enum Protocol protocol;
 };

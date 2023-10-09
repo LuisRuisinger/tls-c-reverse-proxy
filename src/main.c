@@ -11,6 +11,6 @@ int main() {
     struct Server* server = server_init(HTTP, IPv6, TESTIPV6, 8080);
     struct Hashmap* hashmap = hashmap_init(16);
 
-    hashmap->add(hashmap, "/", STATICFILE, "/");
+    hashmap->add(hashmap, "/", STATICFILE, HTTPS, "/");
     server_run(server, hashmap);
 }

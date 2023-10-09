@@ -31,6 +31,7 @@ struct Server* server_init(
     server->version  = version;
     server->protocol = protocol;
     server->port     = port;
+    server->ip       = NULL;
     server->socket   = version == IPv6
                        ? socket(AF_INET6, SOCK_STREAM, 0)
                        : socket(AF_INET, SOCK_STREAM, 0);

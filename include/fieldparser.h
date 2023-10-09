@@ -25,14 +25,26 @@ typedef struct
     char* version;
     char* uri;
     char* route;
+    int32_t length;
     char* cookie;
     char* auth;
     Accept** accept;
+} HTTP_Header;
 
+typedef struct
+{
+    char* header;
+    char* body;
+} HTTP_Message;
+
+typedef struct
+{
+    HTTP_Header* header;
+    HTTP_Message* message;
     Type type;
     Code code;
     Routes* pos_routes;
-} HTTP_Header;
+} HTTP_Wrapper_struct;
 
 HTTP_Header* parse_fields(char* buffer);
 void header_destroy(HTTP_Header* header);

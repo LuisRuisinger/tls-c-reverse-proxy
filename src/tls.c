@@ -11,8 +11,11 @@
 
 SSL_CTX* create_context()
 {
-    const SSL_METHOD *method;
-    SSL_CTX *ctx;
+    const SSL_METHOD* method;
+    SSL_CTX* ctx;
+
+    OpenSSL_add_all_algorithms();
+    SSL_load_error_strings();
 
     method = TLS_server_method();
     ctx    = SSL_CTX_new(method);

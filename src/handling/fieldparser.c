@@ -168,8 +168,10 @@ static void header_print(HTTP_Header* header, uint32_t format)
     );
 
     fprintf(stdout,
+            "length  : %d\n"
             "auth    : %s\n"
             "cookie  : %s\n",
+            header->length,
             header->auth,
             header->cookie
     );
@@ -199,11 +201,11 @@ static void header_print(HTTP_Header* header, uint32_t format)
 }
 
 /*
- * Consumes the read http header request stored and allocated as buffer
+ * Parses the read http header request stored and allocated as buffer
  * in the caller of this function.
  * The buffer will be parsed into a HTTP_Header struct containing all the
  * important fields of the request.
- * The http request will be destroyed at the end of the function.
+ * The http request won't be consumed after parsing;
  */
 
 HTTP_Header* parse_fields(char* buffer)
@@ -239,11 +241,18 @@ HTTP_Header* parse_fields(char* buffer)
     header->version = version;
     header->uri     = uri;
 
-    header->ips     = NULL;
-    header->type    = NONE;
-
     header->auth    = parse_auth_field(buffer, "Authorization: ");
     header->cookie  = parse_auth_field(buffer, "Cookie: ");
+
+    char* length    = parse_auth_field(buffer, "Content-Length: ");
+    if (length != NULL)
+    {
+        header->length = atoi(length);
+        free(length);
+    }
+    else {
+        header->length = 0;
+    }
 
     char* accept_field = parse_auth_field(buffer, "Accept: ");
     uint32_t format    = 0;
@@ -256,7 +265,6 @@ HTTP_Header* parse_fields(char* buffer)
 
 #endif
 
-    free(buffer);
     return header;
 }
 

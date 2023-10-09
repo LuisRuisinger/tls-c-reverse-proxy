@@ -8,6 +8,6 @@
 #include "hashmap.h"
 #include "client.h"
 
-HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap);
+HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap);
 
 #endif //C_REVERSE_PROXY_READHANDLER_H
