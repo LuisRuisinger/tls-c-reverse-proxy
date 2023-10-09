@@ -27,21 +27,15 @@ struct Linkedlist
 {
     char* key;
     Type type;
-    enum Protocol protocol;
     struct Element* initial;
     struct Linkedlist* next;
 };
 
-typedef struct {
-    struct Server** server;
-    enum Protocol protocol;
-} Routes;
-
 struct Hashmap
 {
-    void    (*add)     (struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, struct Server* server);
-    void    (*add_all) (struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, struct Server* f_server, ...);
-    Routes* (*get)     (struct Hashmap* hashmap, char* key, Type type);
+    void            (*add)     (struct Hashmap* hashmap, char* key, Type type, struct Server* server);
+    void            (*add_all) (struct Hashmap* hashmap, char* key, Type type, struct Server* f_server, ...);
+    struct Server** (*get)     (struct Hashmap* hashmap, char* key, Type type);
 
     uint32_t size;
     struct Linkedlist** buckets;

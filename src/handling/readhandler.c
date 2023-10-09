@@ -3,19 +3,13 @@
 //
 
 #include <unistd.h>
-#include <netinet/in.h>
 #include <string.h>
 
 #include "hashmap.h"
 #include "client.h"
 #include "setup.h"
-#include "tpool.h"
-#include "tls.h"
-#include "run.h"
 
-#include "parserwrapper.h"
 #include "fieldparser.h"
-#include "requesthandler.h"
 #include "readhandler.h"
 
 static char* realloc_buffer(char* ptr, int32_t len)
@@ -31,12 +25,6 @@ static char* realloc_buffer(char* ptr, int32_t len)
     free(ptr);
     return new_ptr;
 }
-
-char* read_header(struct Client* client)
-{
-
-}
-
 
 HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap)
 {
@@ -167,12 +155,12 @@ HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap)
     if (header->method != GET && header->accept == NULL)
     {
         wrapper->type = header->method == GET ? STATICFILE : PROTOCOL;
-        wrapper->pos_routes = hashmap->get(hashmap, header->route, wrapper->type);
+        wrapper->server = hashmap->get(hashmap, header->route, wrapper->type);
     }
     else {
         for (int n = 0;; n++)
         {
-            if (header->accept[n] == NULL || wrapper->pos_routes != NULL)
+            if (header->accept[n] == NULL || wrapper->server != NULL)
                 break;
 
             if (header->accept != NULL &&
@@ -182,11 +170,11 @@ HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap)
                 strstr(header->accept[n]->mime, "application/json") != NULL)
                 wrapper->type = PROTOCOL;
 
-            wrapper->pos_routes = hashmap->get(hashmap, header->route, wrapper->type);
+            wrapper->server = hashmap->get(hashmap, header->route, wrapper->type);
         }
     }
 
-    if (wrapper->pos_routes == NULL)
+    if (wrapper->server == NULL)
         wrapper->code = BADREQUEST;
     else {
         wrapper->code = OK;

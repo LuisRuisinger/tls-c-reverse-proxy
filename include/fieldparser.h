@@ -45,7 +45,7 @@ typedef struct
     HTTP_Message* message;
     Type type;
     Code code;
-    Routes* pos_routes;
+    struct Server** server;
 } HTTP_Wrapper_struct;
 
 HTTP_Header* parse_fields(char* buffer);

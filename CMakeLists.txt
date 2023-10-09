@@ -24,6 +24,8 @@ add_executable(
         src/handling/fieldparser.c
         src/handling/uriparser.c
         include/uriparser.h
+        src/handling/branching/functions.c
+        include/functions.h
 )
 
 # enables DEBUG macro if in debug mode

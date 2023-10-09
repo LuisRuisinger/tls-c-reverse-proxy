@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "functions.h"
 #include "fieldparser.h"
 #include "readhandler.h"
 #include "client.h"
@@ -19,9 +20,18 @@ void* handle_request(void* args)
             ((struct Handler_arg*) args)->hashmap
     );
 
-    if (wrapper->pos_routes->server[0] != NULL)
-        handle_upstream_write(wrapper->header, wrapper->message, wrapper->pos_routes->server[0]);
+    //
+    // choose entry - load balancing functions
+    //
+    // also handle BADREQUESTS
+    //
 
+    struct Server* server = function(wrapper->server, RANDOM);
+    handle_upstream_write(wrapper->header, wrapper->message, server);
+
+    //
+    // caching ... response ... etc ...
+    //
 
     close(((struct Handler_arg*) args)->client->fd);
 
@@ -29,7 +39,7 @@ void* handle_request(void* args)
 
     free(wrapper->message->header);
     free(wrapper->message->body);
-    free(wrapper->pos_routes);
+    free(wrapper->server);
     free(wrapper);
 
     free(args);

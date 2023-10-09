@@ -21,7 +21,7 @@ static uint32_t fnv1a_hash(const char *str)
     return hash;
 }
 
-void hashmap_add(struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, struct Server* server)
+void hashmap_add(struct Hashmap* hashmap, char* key, Type type, struct Server* server)
 {
     uint32_t index = fnv1a_hash(key) % hashmap->size;
     struct Linkedlist* cur = hashmap->buckets[index];
@@ -36,7 +36,6 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, enum Protocol pr
         cur->initial  = malloc(sizeof(struct Element));
         assert(cur->initial != NULL);
 
-        cur->protocol = protocol;
         cur->type     = type;
         cur->next     = NULL;
 
@@ -73,14 +72,13 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, enum Protocol pr
     assert(cur->next->initial != NULL);
 
     cur->next->type     = type;
-    cur->next->protocol = protocol;
     cur->next->next     = NULL;
 
     cur->next->initial->value = server;
     cur->next->initial->next  = NULL;
 }
 
-void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, struct Server* f_server, ...)
+void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, struct Server* f_server, ...)
 {
     va_list argList;
     va_start(argList, f_server);
@@ -88,14 +86,14 @@ void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, enum Protoco
     struct Server* current = f_server;
     while (current != NULL)
     {
-        hashmap_add(hashmap, key, type, protocol, current);
+        hashmap_add(hashmap, key, type, current);
         current = va_arg(argList, struct Server*);
     }
 
     va_end(argList);
 }
 
-Routes* hashmap_get(struct Hashmap* hashmap, char* key, Type type)
+struct Server** hashmap_get(struct Hashmap* hashmap, char* key, Type type)
 {
     uint32_t index = fnv1a_hash(key) % hashmap->size;
     struct Linkedlist* cur = hashmap->buckets[index];
@@ -118,21 +116,18 @@ Routes* hashmap_get(struct Hashmap* hashmap, char* key, Type type)
                 element = element->next;
             }
 
-            Routes* routes = malloc(sizeof(Routes));
-            assert(routes != NULL);
-
-            routes->server = calloc(size + 1, sizeof(struct Server*));
-            assert(routes->server != NULL);
+            struct Server** server = calloc(size + 1, sizeof(struct Server*));
+            assert(server != NULL);
 
             element = cur->initial;
             for (int n = 0; n < size; n++)
             {
-                routes->server[n] = element->value;
+                server[n] = element->value;
                 element = element->next;
             }
 
-            routes->server[size] = NULL;
-            return routes;
+            server[size] = NULL;
+            return server;
         }
         cur = cur->next;
     }
