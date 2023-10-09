@@ -125,11 +125,11 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
                 strstr(header->accept[n]->mime, "application/json") != NULL)
                 header->type = PROTOCOL;
 
-            header->ips = hashmap->get(hashmap, header->route, header->type);
+            header->pos_routes = hashmap->get(hashmap, header->route, header->type);
         }
     }
 
-    if (header->ips == NULL)
+    if (header->pos_routes == NULL)
         header->code = BADREQUEST;
     else {
         header->code = OK;

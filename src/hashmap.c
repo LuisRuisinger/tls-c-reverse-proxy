@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #include "hashmap.h"
 
@@ -21,7 +22,7 @@ static uint32_t fnv1a_hash(const char *str)
     return hash;
 }
 
-void hashmap_add(struct Hashmap* hashmap, char* key, Type type, char* value)
+void hashmap_add(struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, char* value)
 {
     uint32_t index = fnv1a_hash(key) % hashmap->size;
     struct Linkedlist* cur = hashmap->buckets[index];
@@ -30,22 +31,15 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, char* value)
     {
         hashmap->buckets[index] = malloc(sizeof(struct Linkedlist));
         cur =  hashmap->buckets[index];
-        if (cur == NULL)
-        {
-            fprintf(stderr, "memory couldn't be allocated for a bucket");
-            exit(EXIT_FAILURE);
-        }
+        assert(cur != NULL);
 
-        cur->key     = strdup(key);;
-        cur->initial = malloc(sizeof(struct Element));
-        cur->type    = type;
-        cur->next    = NULL;
+        cur->key      = strdup(key);
+        cur->initial  = malloc(sizeof(struct Element));
+        assert(cur->initial != NULL);
 
-        if (cur->initial == NULL)
-        {
-            fprintf(stderr, "memory couldn't be allocated for an element of a bucket");
-            exit(EXIT_FAILURE);
-        }
+        cur->protocol = protocol;
+        cur->type     = type;
+        cur->next     = NULL;
 
         cur->initial->value = strdup(value);
         cur->initial->next  = NULL;
@@ -63,12 +57,7 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, char* value)
                 cur_el = cur_el->next;
 
             cur_el->next = malloc(sizeof(struct Element));
-
-            if (cur_el->next == NULL)
-            {
-                fprintf(stderr, "memory couldn't be allocated for a next element");
-                exit(EXIT_FAILURE);
-            }
+            assert(cur_el->next != NULL);
 
             cur_el->next->value = strdup(value);
             cur_el->next->next  = NULL;
@@ -78,29 +67,21 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, char* value)
     }
 
     cur->next = malloc(sizeof(struct Linkedlist));
+    assert(cur->next != NULL);
 
-    if (cur->next == NULL)
-    {
-        fprintf(stderr, "memory couldn't be allocated for a next linkedlist");
-        exit(EXIT_FAILURE);
-    }
+    cur->next->key      = strdup(key);
+    cur->next->initial  = malloc(sizeof(struct Element));
+    assert(cur->next->initial != NULL);
 
-    cur->next->key     = strdup(key);
-    cur->next->initial = malloc(sizeof(struct Element));
-    cur->next->type    = type;
-    cur->next->next    = NULL;
-
-    if (cur->next->initial == NULL)
-    {
-        fprintf(stderr, "memory couldn't be allocated for an element of a bucket");
-        exit(EXIT_FAILURE);
-    }
+    cur->next->type     = type;
+    cur->next->protocol = protocol;
+    cur->next->next     = NULL;
 
     cur->next->initial->value = strdup(value);
     cur->next->initial->next  = NULL;
 }
 
-void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, char* f_value, ...)
+void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, char* f_value, ...)
 {
     va_list argList;
     va_start(argList, f_value);
@@ -108,14 +89,14 @@ void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, char* f_valu
     char* current = f_value;
     while (current != NULL)
     {
-        hashmap_add(hashmap, key, type, current);
+        hashmap_add(hashmap, key, type, protocol, current);
         current = va_arg(argList, char*);
     }
 
     va_end(argList);
 }
 
-char** hashmap_get(struct Hashmap* hashmap, char* key, Type type)
+Routes* hashmap_get(struct Hashmap* hashmap, char* key, Type type)
 {
     uint32_t index = fnv1a_hash(key) % hashmap->size;
     struct Linkedlist* cur = hashmap->buckets[index];
@@ -138,22 +119,21 @@ char** hashmap_get(struct Hashmap* hashmap, char* key, Type type)
                 element = element->next;
             }
 
-            char** list = calloc(size + 1, sizeof(char*));
-            if (list == NULL)
-            {
-                fprintf(stderr, "memory couldn't be allocated for the list of values");
-                exit(EXIT_FAILURE);
-            }
+            Routes* routes = malloc(sizeof(Routes));
+            assert(routes != NULL);
+
+            routes->ips = calloc(size + 1, sizeof(char*));
+            assert(routes->ips != NULL);
 
             element = cur->initial;
             for (int n = 0; n < size; n++)
             {
-                list[n] = element->value;
+                routes->ips[n] = element->value;
                 element = element->next;
             }
 
-            list[size] = NULL;
-            return list;
+            routes->ips[size] = NULL;
+            return routes;
         }
         cur = cur->next;
     }
@@ -163,24 +143,14 @@ char** hashmap_get(struct Hashmap* hashmap, char* key, Type type)
 struct Hashmap* hashmap_init(uint32_t size)
 {
     struct Hashmap* hashmap = malloc(sizeof(struct Hashmap));
-
-    if (hashmap == NULL)
-    {
-        fprintf(stderr, "memory couldn't be allocated for the hashmap");
-        exit(EXIT_FAILURE);
-    }
+    assert(hashmap != NULL);
 
     hashmap->add     = hashmap_add;
     hashmap->add_all = hashmap_add_all;
     hashmap->get     = hashmap_get;
     hashmap->size    = MAX(size, MINSIZE);
     hashmap->buckets = calloc(hashmap->size, sizeof(struct Linkedlist*));
-
-    if (hashmap->buckets == NULL)
-    {
-        fprintf(stderr, "memory couldn't be allocated for the buckets of the hashmap");
-        exit(EXIT_FAILURE);
-    }
+    assert(hashmap->buckets != NULL);
 
     for (int n = 0; n < hashmap->size; n++)
         hashmap->buckets[n] = NULL;

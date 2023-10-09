@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#include "setup.h"
+
 #define MAX(x, y) (x > y ? x : y)
 #define MINSIZE 16
 
@@ -25,15 +27,21 @@ struct Linkedlist
 {
     char* key;
     Type type;
+    enum Protocol protocol;
     struct Element* initial;
     struct Linkedlist* next;
 };
 
+typedef struct {
+    char** ips;
+    enum Protocol protocol;
+} Routes;
+
 struct Hashmap
 {
-    void   (*add)     (struct Hashmap* hashmap, char* key, Type type, char* value);
-    void   (*add_all) (struct Hashmap* hashmap, char* key, Type type, char* f_value, ...);
-    char** (*get)     (struct Hashmap* hashmap, char* key, Type type);
+    void    (*add)     (struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, char* value);
+    void    (*add_all) (struct Hashmap* hashmap, char* key, Type type, enum Protocol protocol, char* f_value, ...);
+    Routes* (*get)     (struct Hashmap* hashmap, char* key, Type type);
 
     uint32_t size;
     struct Linkedlist** buckets;

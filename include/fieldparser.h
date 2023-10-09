@@ -31,7 +31,7 @@ typedef struct
 
     Type type;
     Code code;
-    char** ips;
+    Routes* pos_routes;
 } HTTP_Header;
 
 HTTP_Header* parse_fields(char* buffer);

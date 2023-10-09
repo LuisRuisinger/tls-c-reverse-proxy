@@ -4,7 +4,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <assert.h>
 
 #include "uriparser.h"
 
@@ -22,12 +22,7 @@ char* uri_splice(const char* uri)
     u_int32_t size = query_ptr - uri;
     char* route = calloc(size + 1, sizeof(char));
 
-    if (route == NULL)
-    {
-        fprintf(stderr, "an error occured trying to allocate memory"
-                        "for the route whilst splicing the uri");
-        exit(EXIT_FAILURE);
-    }
+    assert(route != NULL);
     strncpy(route, uri, size);
 
     return route;
