@@ -110,12 +110,12 @@ HTTP_Header* handle_read(struct Client* client, struct Hashmap* hashmap)
     if (header->method != GET && header->accept == NULL)
     {
         header->type = header->method == GET ? STATICFILE : PROTOCOL;
-        header->ips = hashmap->get(hashmap, header->route, header->type);
+        header->pos_routes = hashmap->get(hashmap, header->route, header->type);
     }
     else {
         for (int n = 0;; n++)
         {
-            if (header->accept[n] == NULL || header->ips != NULL)
+            if (header->accept[n] == NULL || header->pos_routes != NULL)
                 break;
 
             if (header->accept != NULL &&
