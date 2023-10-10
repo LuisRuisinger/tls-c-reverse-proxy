@@ -9,6 +9,7 @@
 
 #include "run.h"
 #include "tpool.h"
+#include "responsehandler.h"
 #include "pendingpool.h"
 
 int32_t pool_add(struct Request_pool* pool, HTTP_Wrapper_struct* wrapper, struct Client* client, struct Server* server)
@@ -96,7 +97,7 @@ _Noreturn void pool_update(struct Request_pool* pool)
                         free(cur->request->wrapper);
                         free(cur->request);
 
-                        tpool_add_work(pool->tpool, NULL, args); // change later to responsible read function
+                        tpool_add_work(pool->tpool, (thread_func_t) handle_response, args); // change later to responsible read function
                     }
                     else {
                         bef = cur;

@@ -19,15 +19,19 @@ add_executable(
         src/hashmap.c
         src/handling/readhandler.c
         src/handling/writehandler.c
-        src/handling/upstreamhandler.c
+        src/handling/backend/upstreamhandler.c
         src/handling/requesthandler.c
-        src/handling/fieldparser.c
-        src/handling/uriparser.c
+        src/handling/parser/fieldparser.c
+        src/handling/parser/uriparser.c
         include/uriparser.h
         src/handling/branching/functions.c
         include/functions.h
-        src/pendingpool.c
+        src/handling/pool/pendingpool.c
         include/pendingpool.h
+        src/handling/backend/downstreamhandler.c
+        include/downstreamhandler.h
+        src/handling/responsehandler.c
+        include/responsehandler.h
 )
 
 # enables DEBUG macro if in debug mode

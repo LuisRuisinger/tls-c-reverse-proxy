@@ -61,7 +61,7 @@ HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap)
         }
 
         //
-        // read error or timeout while slowly reading
+        // read error or timeout while slowly backend
         //
 
         if (client->protocol == HTTPS)
