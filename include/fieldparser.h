@@ -35,14 +35,8 @@ typedef struct
 
 typedef struct
 {
-    char* header;
-    char* body;
-} HTTP_Message;
-
-typedef struct
-{
     HTTP_Header* header;
-    HTTP_Message* message;
+    char* body;
     Type type;
     Code code;
     struct Server** server;

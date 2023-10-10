@@ -26,6 +26,8 @@ add_executable(
         include/uriparser.h
         src/handling/branching/functions.c
         include/functions.h
+        src/pendingpool.c
+        include/pendingpool.h
 )
 
 # enables DEBUG macro if in debug mode

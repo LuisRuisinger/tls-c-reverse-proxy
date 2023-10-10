@@ -209,7 +209,7 @@ static void header_print(HTTP_Header* header, uint32_t format)
  * in the caller of this function.
  * The buffer will be parsed into a HTTP_Header struct containing all the
  * important fields of the request.
- * The http request won't be consumed after parsing;
+ * The http request header will be consumed after parsing.
  */
 
 HTTP_Header* parse_fields(char* buffer)
@@ -283,6 +283,7 @@ HTTP_Header* parse_fields(char* buffer)
 
 #endif
 
+    free(buffer);
     return header;
 }
 

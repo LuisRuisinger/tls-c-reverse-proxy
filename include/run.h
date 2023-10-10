@@ -8,6 +8,7 @@
 struct Handler_arg {
     struct Client* client;
     struct Hashmap* hashmap;
+    struct Request_pool* pool;
 };
 
 void server_run(struct Server* server, struct Hashmap* hashmap);

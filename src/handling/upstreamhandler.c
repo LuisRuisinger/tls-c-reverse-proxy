@@ -61,7 +61,7 @@ static char* build_header(HTTP_Header* header)
     return buffer;
 }
 
-char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct Server* server)
+int32_t handle_upstream_write(HTTP_Header* header, char* body, struct Server* server)
 {
     ssize_t rval;
     struct sockaddr_in6 sock_addr;
@@ -74,7 +74,7 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
     if (inet_pton(AF_INET6, server->ip, &sock_addr.sin6_addr) != 1)
     {
         fprintf(stderr, "invalid ip");
-        return NULL;
+        return EXIT_FAILURE;
     }
 
     if (connect(server->socket, (struct sockaddr *) &sock_addr, sizeof(sock_addr)) != 0)
@@ -85,18 +85,18 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
 
         fprintf(stderr, "server not reachable");
         close(server->socket);
-        return NULL;
+        return -1;
     }
 
     fprintf(stdout, "connected to : %s : %d\n\n", server->ip, server->port);
 
     struct Client* client = malloc(sizeof(struct Client));
     if (client == NULL)
-        return NULL;
+        return EXIT_FAILURE;
 
     char* buffer = build_header(header);
     if (buffer == NULL)
-        return NULL;
+        return EXIT_FAILURE;
 
     if (server->protocol == HTTPS)
     {
@@ -108,7 +108,7 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
 
             close(server->socket);
             free(client);
-            return NULL;
+            return EXIT_FAILURE;
         }
 
         configure_context(client->ctx);
@@ -123,13 +123,13 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
 
             close(server->socket);
             free(client);
-            return NULL;
+            return EXIT_FAILURE;
         }
 
         SSL_write(client->ssl, buffer, strlen(buffer) + 1);
 
-        if (message->body != NULL)
-            SSL_write(client->ssl, message->body, strlen(message->body) + 1);
+        if (body != NULL)
+            SSL_write(client->ssl, body, strlen(body) + 1);
 
         SSL_shutdown(client->ssl);
         SSL_free(client->ssl);
@@ -140,12 +140,12 @@ char* handle_upstream_write(HTTP_Header* header, HTTP_Message* message, struct S
         if (rval == -1)
             perror((const char *) &errno);
 
-        if (message->body != NULL)
+        if (body != NULL)
         {
-            rval = write(server->socket, message->body, strlen(message->body) + 1);
+            rval = write(server->socket, body, strlen(body) + 1);
             if (rval == -1)
                 perror((const char *) &errno);
         }
     }
-    return NULL;
+    return EXIT_SUCCESS;
 }

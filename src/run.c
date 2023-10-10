@@ -8,6 +8,7 @@
 
 #include "hashmap.h"
 
+#include "pendingpool.h"
 #include "../include/setup.h"
 #include "../include/tpool.h"
 #include "../include/client.h"

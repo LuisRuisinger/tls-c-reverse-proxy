@@ -42,10 +42,6 @@ HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap)
     if (buffer_header == NULL)
         return NULL;
 
-    HTTP_Message* message = malloc(sizeof(HTTP_Message));
-    if (message == NULL)
-        return NULL;
-
     // read the header
 
     start_time = time(NULL);
@@ -91,7 +87,6 @@ HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap)
                 return NULL;
         }
     }
-    message->header = buffer_header;
 
 #if DEBUG
 
@@ -111,9 +106,10 @@ HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap)
 
     // read the body
 
+    char* buffer_body;
     if (header->length != 0)
     {
-        char* buffer_body  = calloc(header->length + 1, sizeof(char));
+        buffer_body  = calloc(header->length + 1, sizeof(char));
         if (buffer_body == NULL)
         {
             free(buffer_header);
@@ -137,7 +133,7 @@ HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap)
                 return NULL;
             }
         }
-        message->body = buffer_body;
+
     }
 
     // find routes
@@ -149,8 +145,8 @@ HTTP_Wrapper_struct* handle_read(struct Client* client, struct Hashmap* hashmap)
         return NULL;
     }
 
-    wrapper->header  = header;
-    wrapper->message = message;
+    wrapper->header = header;
+    wrapper->body   = buffer_body;
 
     if (header->method != GET && header->accept == NULL)
     {

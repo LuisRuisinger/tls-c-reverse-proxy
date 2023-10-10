@@ -24,11 +24,11 @@ static uint32_t fnv1a_hash(const char *str)
 void hashmap_add(struct Hashmap* hashmap, char* key, Type type, struct Server* server)
 {
     uint32_t index = fnv1a_hash(key) % hashmap->size;
-    struct Linkedlist* cur = hashmap->buckets[index];
+    struct Linkedlist_hashmap* cur = hashmap->buckets[index];
 
     if (hashmap->buckets[index] == NULL)
     {
-        hashmap->buckets[index] = malloc(sizeof(struct Linkedlist));
+        hashmap->buckets[index] = malloc(sizeof(struct Linkedlist_hashmap));
         cur =  hashmap->buckets[index];
         assert(cur != NULL);
 
@@ -64,7 +64,7 @@ void hashmap_add(struct Hashmap* hashmap, char* key, Type type, struct Server* s
         cur = cur->next;
     }
 
-    cur->next = malloc(sizeof(struct Linkedlist));
+    cur->next = malloc(sizeof(struct Linkedlist_hashmap));
     assert(cur->next != NULL);
 
     cur->next->key      = strdup(key);
@@ -96,7 +96,7 @@ void hashmap_add_all(struct Hashmap* hashmap, char* key, Type type, struct Serve
 struct Server** hashmap_get(struct Hashmap* hashmap, char* key, Type type)
 {
     uint32_t index = fnv1a_hash(key) % hashmap->size;
-    struct Linkedlist* cur = hashmap->buckets[index];
+    struct Linkedlist_hashmap* cur = hashmap->buckets[index];
 
     if (cur == NULL)
         return NULL;
@@ -143,7 +143,7 @@ struct Hashmap* hashmap_init(uint32_t size)
     hashmap->add_all = hashmap_add_all;
     hashmap->get     = hashmap_get;
     hashmap->size    = MAX(size, MINSIZE);
-    hashmap->buckets = calloc(hashmap->size, sizeof(struct Linkedlist*));
+    hashmap->buckets = calloc(hashmap->size, sizeof(struct Linkedlist_hashmap*));
     assert(hashmap->buckets != NULL);
 
     for (int n = 0; n < hashmap->size; n++)

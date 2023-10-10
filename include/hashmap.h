@@ -23,12 +23,12 @@ struct Element
     struct Element* next;
 };
 
-struct Linkedlist
+struct Linkedlist_hashmap
 {
     char* key;
     Type type;
     struct Element* initial;
-    struct Linkedlist* next;
+    struct Linkedlist_hashmap* next;
 };
 
 struct Hashmap
@@ -38,7 +38,7 @@ struct Hashmap
     struct Server** (*get)     (struct Hashmap* hashmap, char* key, Type type);
 
     uint32_t size;
-    struct Linkedlist** buckets;
+    struct Linkedlist_hashmap** buckets;
 };
 
 struct Hashmap* hashmap_init(uint32_t size);
