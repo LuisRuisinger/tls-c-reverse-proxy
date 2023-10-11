@@ -84,25 +84,19 @@ _Noreturn void pool_update(struct Request_pool* pool)
                             pool->first = cur->next;
                         FD_CLR(cur->request->upstream->socket, pool->pending);
 
-                        Request* args = malloc(sizeof(Request));
-                        assert(args != NULL);
-
-                        args->client   = cur->request->client;
-                        args->upstream = cur->request->upstream;
-
                         //
                         // still storing wrapper in case later needed ?
                         //
 
-                        free(cur->request->wrapper);
-                        free(cur->request);
-
-                        tpool_add_work(pool->tpool, (thread_func_t) handle_response, args); // change later to responsible read function
+                        tpool_add_work(pool->tpool, (thread_func_t) handle_response, cur->request); // change later to responsible read function
+                        struct Linkedlist_pool* tmp = cur;
+                        cur = cur->next;
+                        free(tmp);
                     }
                     else {
                         bef = cur;
+                        cur = cur->next;
                     }
-                    cur = cur->next;
                 }
             }
             pthread_mutex_unlock(&(pool->work_mutex));

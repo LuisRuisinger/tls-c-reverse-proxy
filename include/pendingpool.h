@@ -10,14 +10,6 @@
 
 #include "fieldparser.h"
 
-struct Request_pool;
-
-typedef struct
-{
-    struct Client* client;
-    struct Server* upstream;
-} Request;
-
 typedef struct
 {
     HTTP_Wrapper_struct* wrapper;
